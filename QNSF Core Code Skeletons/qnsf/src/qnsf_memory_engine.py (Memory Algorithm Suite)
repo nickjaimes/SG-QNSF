@@ -1,0 +1,60 @@
+from typing import List, Dict
+
+
+class QNSFMemoryEngine:
+    """
+    Neuromorphic-style memory engine.
+    Stores compressed patterns of system experiences and uses them
+    to propose evolved strategies and risk indices.
+    """
+
+    def __init__(self):
+        self.memory: List[Dict] = []
+
+    def store_event(self, event: Dict):
+        """
+        Store a simplified snapshot of an event.
+        """
+        pattern = {
+            "domain": event.get("domain", "unknown"),
+            "severity": float(event.get("severity", 0)),
+            "result": event.get("result", "unknown"),
+            "action_taken": event.get("action_taken", "none"),
+        }
+        self.memory.append(pattern)
+
+    def compute_risk_index(self) -> float:
+        """
+        Computes an overall risk index based on memory.
+        Very simple base logic: average of high-severity events.
+        """
+        if not self.memory:
+            return 0.0
+
+        severe_events = [m for m in self.memory if m["severity"] > 0.6]
+        if not severe_events:
+            return 0.1
+
+        avg = sum(m["severity"] for m in severe_events) / len(severe_events)
+        return min(1.0, max(0.0, avg))
+
+    def propose_evolved_strategy(self, algo_name: str) -> str:
+        """
+        Return a modified strategy name based on memory patterns.
+        Example:
+        - Input: "baseline_trinity_security"
+        - Output: "baseline_trinity_security+qnsf_v1"
+
+        This is symbolic for now, but devs can plug this into real config.
+        """
+        risk_index = self.compute_risk_index()
+
+        if risk_index < 0.3:
+            suffix = "stable"
+        elif risk_index < 0.7:
+            suffix = "reinforced"
+        else:
+            suffix = "emergency_hardened"
+
+        return f"{algo_name}+qnsf_{suffix}"
+
